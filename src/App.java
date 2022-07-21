@@ -1,40 +1,33 @@
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
-import java.util.Map;
+
+import Class.HttpClientRequest;
+import Factory.StickerFactory;
+import Obj.Content;
+import models.NasaApiContent;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        String url = "https://api.themoviedb.org/3/trending/movie/day?api_key=9d882d8af9270abef6ca6ab3100ac6da";
+        String url = "https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY&start_date=2022-06-01&end_date=2022-07-20";
 
-        URI apiUrl = URI.create(url);
-        var client = HttpClient.newHttpClient();
-        var request = HttpRequest.newBuilder(apiUrl).GET().build();
+        var http = new HttpClientRequest();
+        String data = http.getData(url);
 
-        HttpResponse<String> response = client.send(request, BodyHandlers.ofString());
-        String body = response.body();
-
-        var jsonParser = new JsonParser();
-        List<Map<String, String>> moviesList = jsonParser.parser(body);
+        var apiContent = new NasaApiContent();
+        List<Content> contents = apiContent.getContents(data);
 
         var stickerFactory = new StickerFactory();
-        for (Map<String, String> movie : moviesList) {
+        for (int i = 0; i < 3; i++) {
 
-            String movieTitle = movie.get("title");
-            String movieImageUrl = "https://image.tmdb.org/t/p/w500" + movie.get("backdrop_path");
+            Content content = contents.get(i);
 
-            System.out.println("\u001B[32m" + movieTitle + "\u001B[0m");
-            System.out.println("Banner: " + movieImageUrl);
-            System.out.println("Votos: " + movie.get("vote_average"));
+            System.out.println("\u001B[32m" + content.getTitle() + "\u001B[0m");
+            System.out.println("Image: " + content.getUrlImage());
             System.out.println();
 
-            InputStream inputStream = new URL(movieImageUrl).openStream();
-            stickerFactory.create(inputStream, "stickers/" + movieTitle.replaceAll(":", "") + ".png");
+            InputStream inputStream = new URL(content.getUrlImage()).openStream();
+            stickerFactory.create(inputStream, "stickers/" + content.getTitle() + ".png");
         }
     }
 }

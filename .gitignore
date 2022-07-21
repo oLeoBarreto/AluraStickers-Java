@@ -27,4 +27,4 @@ replay_pid*
 .env
 
 # image path
-stickers/
+/stickers
